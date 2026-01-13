@@ -29,15 +29,29 @@ def test_bedrock_connection() -> None:
         sys.exit(1)
 
 
+def run_gui() -> None:
+    """GUIアプリケーションを起動する"""
+    load_dotenv()
+    from .gui import MainWindow
+
+    app = MainWindow()
+    app.run()
+
+
 def main() -> None:
     """メインエントリーポイント"""
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
-        test_bedrock_connection()
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        if command == "test":
+            test_bedrock_connection()
+        elif command == "gui":
+            run_gui()
+        else:
+            print(f"不明なコマンド: {command}")
+            sys.exit(1)
     else:
-        print("SONTA-kun v0.1.0 - 週報・月報作成支援ツール")
-        print()
-        print("使用方法:")
-        print("  python -m sonta_kun test  - Bedrock接続テスト")
+        # デフォルトでGUIを起動
+        run_gui()
 
 
 if __name__ == "__main__":
