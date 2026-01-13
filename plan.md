@@ -74,9 +74,9 @@ Amazon Bedrock (Claude) を活用し、ローカルPC上で動作する。
 ## Tasks
 
 ### Phase 1: 基盤構築
-- [ ] プロジェクト構成の決定（言語、フレームワーク）
-- [ ] 開発環境のセットアップ
-- [ ] Amazon Bedrock API接続の実装
+- [x] プロジェクト構成の決定（言語、フレームワーク）
+- [x] 開発環境のセットアップ
+- [x] Amazon Bedrock API接続の実装
 
 ### Phase 2: 入力機能
 - [ ] Excelファイル読み込み機能の実装
