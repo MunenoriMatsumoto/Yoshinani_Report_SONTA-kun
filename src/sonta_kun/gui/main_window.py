@@ -217,9 +217,17 @@ class MainWindow:
         preview_label = ttk.Label(parent, text="読み込み内容:", bootstyle="secondary")
         preview_label.pack(anchor=tk.W, pady=(5, 5))
 
-        self._excel_preview_text = ScrolledText(parent, height=12, autohide=True)
-        self._excel_preview_text.pack(fill=tk.BOTH, expand=True)
+        self._excel_preview_text = ScrolledText(parent, height=10, autohide=True)
+        self._excel_preview_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         self._excel_preview_text.text.config(state=tk.DISABLED)
+
+        # レポート出力ボタン
+        excel_btn_frame = ttk.Frame(parent)
+        excel_btn_frame.pack(fill=tk.X)
+        ttk.Button(
+            excel_btn_frame, text="レポート出力", command=self._generate_from_excel,
+            bootstyle="success", width=12
+        ).pack(side=tk.RIGHT)
 
     def _setup_freetext_tab(self, parent: ttk.Frame) -> None:
         """自由記述タブをセットアップ"""
@@ -255,9 +263,13 @@ class MainWindow:
             bootstyle="warning-outline", width=8
         ).pack(side=tk.LEFT)
         ttk.Button(
-            btn_frame, text="読み込み", command=self._load_freetext,
-            bootstyle="primary", width=10
+            btn_frame, text="レポート出力", command=self._generate_from_freetext,
+            bootstyle="success", width=12
         ).pack(side=tk.RIGHT)
+        ttk.Button(
+            btn_frame, text="読み込み", command=self._load_freetext,
+            bootstyle="primary-outline", width=10
+        ).pack(side=tk.RIGHT, padx=(0, 5))
 
     def _on_tab_changed(self, event) -> None:
         """タブ切り替え時の処理"""
@@ -281,6 +293,19 @@ GUI実装 [進行中] (高)
         self._freetext_input.text.delete("1.0", tk.END)
         self._current_todo_list = None
         self._status_label.config(text="")
+
+    def _generate_from_freetext(self) -> None:
+        """自由記述から直接レポートを生成"""
+        self._load_freetext()
+        if self._current_todo_list:
+            self._generate_report()
+
+    def _generate_from_excel(self) -> None:
+        """Excelから直接レポートを生成"""
+        if not self._current_todo_list:
+            messagebox.showwarning("警告", "先にExcelファイルを読み込んでください")
+            return
+        self._generate_report()
 
     def _load_freetext(self) -> None:
         """自由記述からToDoリストを読み込む"""
