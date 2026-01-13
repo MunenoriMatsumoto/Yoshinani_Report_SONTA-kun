@@ -9,7 +9,7 @@ class BedrockConfig:
     """Amazon Bedrock設定"""
 
     region_name: str = "ap-northeast-1"
-    model_id: str = "anthropic.claude-sonnet-4-5-20250514-v1:0"
+    model_id: str = "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
     max_tokens: int = 4096
     temperature: float = 0.7
 
@@ -19,7 +19,7 @@ class BedrockConfig:
         return cls(
             region_name=os.getenv("AWS_REGION", "ap-northeast-1"),
             model_id=os.getenv(
-                "BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-5-20250514-v1:0"
+                "BEDROCK_MODEL_ID", "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
             ),
             max_tokens=int(os.getenv("BEDROCK_MAX_TOKENS", "4096")),
             temperature=float(os.getenv("BEDROCK_TEMPERATURE", "0.7")),
