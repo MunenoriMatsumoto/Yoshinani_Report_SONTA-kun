@@ -1,8 +1,17 @@
 """設定画面モジュール"""
 
 import tkinter as tk
-from tkinter import messagebox, ttk
 from typing import Optional
+
+try:
+    import ttkbootstrap as ttk
+    from ttkbootstrap.constants import *
+    MODERN_UI = True
+except ImportError:
+    from tkinter import ttk
+    MODERN_UI = False
+
+from tkinter import messagebox
 
 from ..profile_manager import ProfileManager, TargetProfile
 
@@ -14,9 +23,15 @@ class SettingsWindow:
         self._parent = parent
         self._profile_manager = profile_manager
 
-        self._window = tk.Toplevel(parent)
-        self._window.title("設定 - 報告対象者プロファイル")
-        self._window.geometry("600x500")
+        if MODERN_UI:
+            self._window = ttk.Toplevel(parent)
+            self._window.title("設定 - 報告対象者プロファイル")
+            self._window.geometry("700x550")
+        else:
+            self._window = tk.Toplevel(parent)
+            self._window.title("設定 - 報告対象者プロファイル")
+            self._window.geometry("700x550")
+
         self._window.transient(parent)
         self._window.grab_set()
 
@@ -31,108 +46,162 @@ class SettingsWindow:
 
     def _setup_ui(self) -> None:
         """UIをセットアップ"""
-        main_frame = ttk.Frame(self._window, padding="10")
+        main_frame = ttk.Frame(self._window, padding=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # 左側：プロファイルリスト
-        left_frame = ttk.LabelFrame(main_frame, text="プロファイル一覧", padding="5")
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+        left_frame = ttk.Labelframe(main_frame, text=" プロファイル一覧 ", padding=10, bootstyle="primary")
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
 
-        self._profile_listbox = tk.Listbox(left_frame, exportselection=False)
-        self._profile_listbox.pack(fill=tk.BOTH, expand=True)
+        # リストボックス
+        list_container = ttk.Frame(left_frame)
+        list_container.pack(fill=tk.BOTH, expand=True)
+
+        self._profile_listbox = tk.Listbox(
+            list_container,
+            exportselection=False,
+            font=("Helvetica", 11),
+            selectbackground="#0d6efd",
+            selectforeground="white",
+        )
+        self._profile_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self._profile_listbox.bind("<<ListboxSelect>>", self._on_profile_select)
+
+        scrollbar = ttk.Scrollbar(list_container, orient=tk.VERTICAL, command=self._profile_listbox.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self._profile_listbox.config(yscrollcommand=scrollbar.set)
 
         # リストボタン
         list_btn_frame = ttk.Frame(left_frame)
-        list_btn_frame.pack(fill=tk.X, pady=(5, 0))
+        list_btn_frame.pack(fill=tk.X, pady=(10, 0))
 
-        ttk.Button(list_btn_frame, text="新規", command=self._new_profile).pack(side=tk.LEFT, padx=2)
-        ttk.Button(list_btn_frame, text="削除", command=self._delete_profile).pack(side=tk.LEFT, padx=2)
-        ttk.Button(list_btn_frame, text="リセット", command=self._reset_profiles).pack(side=tk.RIGHT, padx=2)
+        ttk.Button(
+            list_btn_frame, text="新規", command=self._new_profile,
+            bootstyle="success", width=8
+        ).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(
+            list_btn_frame, text="削除", command=self._delete_profile,
+            bootstyle="danger-outline", width=8
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            list_btn_frame, text="リセット", command=self._reset_profiles,
+            bootstyle="warning-outline", width=8
+        ).pack(side=tk.RIGHT)
 
         # 右側：プロファイル編集
-        right_frame = ttk.LabelFrame(main_frame, text="プロファイル編集", padding="5")
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
+        right_frame = ttk.Labelframe(main_frame, text=" プロファイル編集 ", padding=10, bootstyle="info")
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         self._setup_edit_form(right_frame)
 
     def _setup_edit_form(self, parent: ttk.Frame) -> None:
         """編集フォームをセットアップ"""
         # 名前
-        ttk.Label(parent, text="名前:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        name_frame = ttk.Frame(parent)
+        name_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(name_frame, text="名前:", width=12).pack(side=tk.LEFT)
         self._name_var = tk.StringVar()
-        self._name_entry = ttk.Entry(parent, textvariable=self._name_var)
-        self._name_entry.grid(row=0, column=1, sticky=tk.EW, pady=2, padx=5)
+        self._name_entry = ttk.Entry(name_frame, textvariable=self._name_var, bootstyle="primary")
+        self._name_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # 役職
-        ttk.Label(parent, text="役職:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        role_frame = ttk.Frame(parent)
+        role_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(role_frame, text="役職:", width=12).pack(side=tk.LEFT)
         self._role_var = tk.StringVar()
         self._role_combo = ttk.Combobox(
-            parent,
+            role_frame,
             textvariable=self._role_var,
             values=["メンバー", "課長", "室長", "部長", "その他"],
+            bootstyle="primary"
         )
-        self._role_combo.grid(row=1, column=1, sticky=tk.EW, pady=2, padx=5)
+        self._role_combo.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # 関心事
-        ttk.Label(parent, text="関心事:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        focus_frame = ttk.Frame(parent)
+        focus_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(focus_frame, text="関心事:", width=12).pack(side=tk.LEFT)
         self._focus_var = tk.StringVar()
         self._focus_combo = ttk.Combobox(
-            parent,
+            focus_frame,
             textvariable=self._focus_var,
             values=["納期重視", "方針重視", "コスト重視", "詳細重視", "品質重視"],
+            bootstyle="primary"
         )
-        self._focus_combo.grid(row=2, column=1, sticky=tk.EW, pady=2, padx=5)
+        self._focus_combo.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # 説明
-        ttk.Label(parent, text="説明:").grid(row=3, column=0, sticky=tk.NW, pady=2)
-        self._desc_text = tk.Text(parent, height=3)
-        self._desc_text.grid(row=3, column=1, sticky=tk.EW, pady=2, padx=5)
+        desc_frame = ttk.Frame(parent)
+        desc_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(desc_frame, text="説明:", width=12).pack(side=tk.LEFT, anchor=tk.N)
+        self._desc_text = tk.Text(desc_frame, height=3, font=("Helvetica", 10))
+        self._desc_text.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # サマリ文字数
-        ttk.Label(parent, text="サマリ文字数:").grid(row=4, column=0, sticky=tk.W, pady=2)
+        summary_frame = ttk.Frame(parent)
+        summary_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(summary_frame, text="サマリ文字数:", width=12).pack(side=tk.LEFT)
         self._summary_chars_var = tk.StringVar(value="300")
         self._summary_chars_spinbox = ttk.Spinbox(
-            parent,
+            summary_frame,
             textvariable=self._summary_chars_var,
             from_=100,
             to=1000,
             width=10,
+            bootstyle="primary"
         )
-        self._summary_chars_spinbox.grid(row=4, column=1, sticky=tk.W, pady=2, padx=5)
+        self._summary_chars_spinbox.pack(side=tk.LEFT)
 
         # 詳細度
-        ttk.Label(parent, text="詳細度:").grid(row=5, column=0, sticky=tk.W, pady=2)
-        self._detail_level_var = tk.StringVar(value="medium")
         detail_frame = ttk.Frame(parent)
-        detail_frame.grid(row=5, column=1, sticky=tk.W, pady=2, padx=5)
-        ttk.Radiobutton(detail_frame, text="低", variable=self._detail_level_var, value="low").pack(side=tk.LEFT)
-        ttk.Radiobutton(detail_frame, text="中", variable=self._detail_level_var, value="medium").pack(side=tk.LEFT, padx=10)
-        ttk.Radiobutton(detail_frame, text="高", variable=self._detail_level_var, value="high").pack(side=tk.LEFT)
+        detail_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(detail_frame, text="詳細度:", width=12).pack(side=tk.LEFT)
+        self._detail_level_var = tk.StringVar(value="medium")
+        ttk.Radiobutton(
+            detail_frame, text="低", variable=self._detail_level_var,
+            value="low", bootstyle="info-outline-toolbutton"
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            detail_frame, text="中", variable=self._detail_level_var,
+            value="medium", bootstyle="info-outline-toolbutton"
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            detail_frame, text="高", variable=self._detail_level_var,
+            value="high", bootstyle="info-outline-toolbutton"
+        ).pack(side=tk.LEFT, padx=5)
 
         # 出力形式
-        ttk.Label(parent, text="出力形式:").grid(row=6, column=0, sticky=tk.W, pady=2)
-        self._format_var = tk.StringVar(value="markdown")
         format_frame = ttk.Frame(parent)
-        format_frame.grid(row=6, column=1, sticky=tk.W, pady=2, padx=5)
-        ttk.Radiobutton(format_frame, text="Markdown", variable=self._format_var, value="markdown").pack(side=tk.LEFT)
-        ttk.Radiobutton(format_frame, text="Text", variable=self._format_var, value="text").pack(side=tk.LEFT, padx=10)
+        format_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(format_frame, text="出力形式:", width=12).pack(side=tk.LEFT)
+        self._format_var = tk.StringVar(value="markdown")
+        ttk.Radiobutton(
+            format_frame, text="Markdown", variable=self._format_var,
+            value="markdown", bootstyle="success-outline-toolbutton"
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            format_frame, text="Text", variable=self._format_var,
+            value="text", bootstyle="success-outline-toolbutton"
+        ).pack(side=tk.LEFT, padx=5)
 
-        # グリッド設定
-        parent.columnconfigure(1, weight=1)
-
-        # 保存ボタン
+        # ボタン
         btn_frame = ttk.Frame(parent)
-        btn_frame.grid(row=7, column=0, columnspan=2, pady=10)
+        btn_frame.pack(fill=tk.X, pady=(20, 0))
 
-        ttk.Button(btn_frame, text="保存", command=self._save_profile).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="閉じる", command=self._window.destroy).pack(side=tk.LEFT, padx=5)
+        ttk.Button(
+            btn_frame, text="保存", command=self._save_profile,
+            bootstyle="success", width=10
+        ).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(
+            btn_frame, text="閉じる", command=self._window.destroy,
+            bootstyle="secondary-outline", width=10
+        ).pack(side=tk.LEFT)
 
     def _load_profiles(self) -> None:
         """プロファイルリストを読み込む"""
         self._profile_listbox.delete(0, tk.END)
         for profile in self._profile_manager.list_profiles():
-            self._profile_listbox.insert(tk.END, profile.name)
+            self._profile_listbox.insert(tk.END, f"  {profile.name}  ({profile.role})")
 
     def _on_profile_select(self, event) -> None:
         """プロファイル選択時の処理"""
@@ -140,7 +209,10 @@ class SettingsWindow:
         if not selection:
             return
 
-        name = self._profile_listbox.get(selection[0])
+        # リストから名前を抽出
+        item_text = self._profile_listbox.get(selection[0])
+        name = item_text.split("(")[0].strip()
+
         profile = self._profile_manager.get_profile(name)
         if profile:
             self._selected_profile = profile
@@ -220,7 +292,9 @@ class SettingsWindow:
             messagebox.showwarning("警告", "削除するプロファイルを選択してください")
             return
 
-        name = self._profile_listbox.get(selection[0])
+        item_text = self._profile_listbox.get(selection[0])
+        name = item_text.split("(")[0].strip()
+
         if messagebox.askyesno("確認", f"プロファイル '{name}' を削除しますか？"):
             self._profile_manager.delete_profile(name)
             self._load_profiles()
